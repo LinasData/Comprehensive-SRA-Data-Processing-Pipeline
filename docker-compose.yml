@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     sra-tools:
-        build: extractor.Dockerfile
+        build: .
         volumes:
             - ./${SRA_ID}/data:/output
         command:
