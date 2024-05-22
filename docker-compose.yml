@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+    sra-tools:
+        build: extractor.Dockerfile
+        volumes:
+            - ./${SRA_ID}/data:/output
+        command:
+            - /bin/sh
+            - -c
+            - |
+              echo === Fetching data of ${SRA_ID} === && \
+              prefetch ${SRA_ID} && \
+              fasterq-dump --progress ${SRA_ID} -O /output && \
+              cat /output/${SRA_ID}*.fastq | gzip > ${SRA_ID}.fastq.gz
+
+    fastqc:
+        image: biocontainers/fastqc:v0.11.9_cv7
+        volumes:
+            - ./${SRA_ID}/data:/output
+            - ./${SRA_ID}/reports:/reports
+        command:
+            - /bin/sh
+            - -c
+            - |
+              echo === Generating Sequencing Quality Reports of ${SRA_ID} === && \
+              fastqc -t 20 /output/${SRA_ID}.fastq.gz -o /reports/
+        depends_on:
+          sra-tools:
+              condition: service_completed_successfully
+
+    multiqc:
+        image: multiqc/multiqc:v1.21
+        volumes:
+            - ./${SRA_ID}/reports:/reports
+        command:
+            - /bin/sh
+            - -c
+            - |
+              echo === Concatinating Sequencing Quality Reports of ${SRA_ID} === && \
+              multiqc /reports -o /reports
+        depends_on:
+          fastqc:
+              condition: service_completed_successfully

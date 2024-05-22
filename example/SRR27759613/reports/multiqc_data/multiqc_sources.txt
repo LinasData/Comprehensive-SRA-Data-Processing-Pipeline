@@ -1,0 +1,2 @@
+Module	Section	Sample Name	Source
+FastQC	all_sections	SRR27759613	/reports/SRR27759613_fastqc.zip
